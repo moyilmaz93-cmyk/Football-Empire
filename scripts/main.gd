@@ -10,6 +10,7 @@ const PLAYER_COUNT := 11
 const PLAYER_SPEED := 6.0
 const BALL_RADIUS := 0.45
 const MATCH_LENGTH_SECONDS := 90.0 * 60.0
+const MATCH_TIME_SCALE := 60.0 # One real second advances one in-game minute.
 
 var blue_players: Array[Node3D] = []
 var red_players: Array[Node3D] = []
@@ -42,7 +43,11 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if not match_running:
 		return
-	match_seconds = minf(match_seconds + delta, MATCH_LENGTH_SECONDS)
+	match_seconds = minf(match_seconds + delta * MATCH_TIME_SCALE, MATCH_LENGTH_SECONDS)
+	if match_seconds >= MATCH_LENGTH_SECONDS:
+		match_running = false
+		pause_button.text = "MAÇ BİTTİ"
+		pause_button.disabled = true
 	ai_clock += delta
 	if ai_clock >= 0.8:
 		ai_clock = 0.0
