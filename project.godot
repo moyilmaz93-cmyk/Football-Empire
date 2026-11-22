@@ -2,7 +2,7 @@ config_version=5
 
 [application]
 config/name="Football Empire"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/career_setup.tscn"
 
 [autoload]
 CareerDatabase="*res://scripts/data/career_database_service.gd"
