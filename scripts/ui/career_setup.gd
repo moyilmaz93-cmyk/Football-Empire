@@ -1,6 +1,6 @@
 extends Control
 
-const MATCH_SCENE := "res://scenes/main.tscn"
+const MATCH_SCENE := "res://scenes/match.tscn"
 
 var season_select: OptionButton
 var league_select: OptionButton
