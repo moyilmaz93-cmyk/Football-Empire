@@ -1,46 +1,67 @@
 #!/usr/bin/env python3
 """Convert OpenFootballBase Parquet releases to compact Turkish squad JSON."""
 from __future__ import annotations
+
 import argparse
 import json
 from pathlib import Path
 from urllib.parse import quote
+
 import duckdb
 
 DEFAULT_SEASONS = ("2024/25", "2025/26", "2026/27")
+COMPETITIONS = ("TUR-SL", "TUR-L1")
 
-def find_one(root: Path, pattern: str) -> Path:
-    matches = sorted(root.rglob(pattern))
-    if not matches:
-        raise FileNotFoundError(f"Required Parquet file not found: {pattern}")
-    return matches[0]
+
+def resolve_manifest_file(data_root: Path, manifest: dict, table: str, season: str | None = None) -> Path:
+    """Resolve a Parquet path using the release manifest (filenames are hash-based)."""
+    if season is None:
+        entry = manifest.get("tables", {}).get(table)
+    else:
+        entry = manifest.get("seasons", {}).get(season, {}).get("files", {}).get(table)
+    if not isinstance(entry, dict) or not entry.get("path"):
+        raise FileNotFoundError(f"Manifest has no {table!r} Parquet entry for season {season!r}")
+    path = (data_root / entry["path"]).resolve()
+    if not path.is_file():
+        raise FileNotFoundError(f"Manifest references a missing Parquet file: {path}")
+    return path
+
 
 def source_url(language: str, title: str, revision: int) -> str:
     lang = language.strip() or "en"
     safe_title = quote(title.replace(" ", "_"), safe="")
     return f"https://{lang}.wikipedia.org/w/index.php?title={safe_title}&oldid={revision}"
 
+
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", required=True)
+    parser.add_argument("--input", required=True, help="Extracted OpenFootballBase release directory")
     parser.add_argument("--output", required=True)
     parser.add_argument("--seasons", nargs="*", default=list(DEFAULT_SEASONS))
     args = parser.parse_args()
 
     root = Path(args.input).resolve()
-    manifest_path = find_one(root, "manifest.json")
+    manifest_candidates = sorted(root.rglob("manifest.json"))
+    if not manifest_candidates:
+        raise FileNotFoundError("manifest.json not found in extracted release")
+    manifest_path = manifest_candidates[0]
     data_root = manifest_path.parent
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
     squad_files = []
     for season in args.seasons:
-        squad_files.extend(sorted((data_root / "squad").glob(f"{season.replace('/', '-') }.*.parquet")))
+        try:
+            squad_files.append(resolve_manifest_file(data_root, manifest, "squad", season))
+        except FileNotFoundError:
+            # A release may legitimately omit a requested season; report it below.
+            print(f"WARNING: no squad file in release for season {season}")
     if not squad_files:
-        raise FileNotFoundError("No squad Parquet files found for requested seasons")
+        raise FileNotFoundError("None of the requested seasons has a squad file in the release")
 
-    club_file = find_one(data_root, "club.*.parquet")
-    profile_file = find_one(data_root, "player_profile.*.parquet")
-    birth_file = find_one(data_root, "birth.*.parquet")
+    club_file = resolve_manifest_file(data_root, manifest, "club")
+    profile_file = resolve_manifest_file(data_root, manifest, "player_profile")
+    birth_file = resolve_manifest_file(data_root, manifest, "birth")
+
     con = duckdb.connect(":memory:")
     query = """
         SELECT s.season, s.competition, s.club,
@@ -69,14 +90,21 @@ def main() -> None:
         WHERE s.competition IN ('TUR-SL', 'TUR-L1')
         ORDER BY s.season, s.competition, club_name, s.shirt_number NULLS LAST, player
     """
-    rows = con.execute(query, [list(map(str, squad_files)), str(club_file), str(profile_file), str(birth_file)]).fetchall()
+    rows = con.execute(
+        query,
+        [list(map(str, squad_files)), str(club_file), str(profile_file), str(birth_file)],
+    ).fetchall()
     columns = [column[0] for column in con.description]
+
     records = []
     for values in rows:
         row = dict(zip(columns, values))
         revision = int(row.get("source_revid") or 0)
         row["source_revid"] = revision
-        row["source_url"] = source_url(str(row.get("source_lang") or "en"), str(row.get("source_title") or ""), revision) if revision and row.get("source_title") else ""
+        row["source_url"] = (
+            source_url(str(row.get("source_lang") or "en"), str(row.get("source_title") or ""), revision)
+            if revision and row.get("source_title") else ""
+        )
         for key, value in list(row.items()):
             if value is None:
                 row[key] = None
@@ -96,13 +124,14 @@ def main() -> None:
         "attribution": {
             "text": "Squad data derived from Wikipedia (CC BY-SA 4.0); club and birth metadata from Wikidata (CC0).",
             "source_note": "Each squad record retains source_lang, source_title, source_revid and source_url.",
-            "share_alike": "Redistributed adaptations of the squad database must remain available under CC BY-SA 4.0."
+            "share_alike": "Redistributed adaptations of the squad database must remain available under CC BY-SA 4.0.",
         },
         "coverage_note": "Only source records actually present in the release are included. Missing club squads are not reconstructed.",
-        "records": records
+        "records": records,
     }
     output.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"Wrote {len(records)} squad entries to {output}")
+
 
 if __name__ == "__main__":
     main()
