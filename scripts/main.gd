@@ -428,7 +428,10 @@ func _update_hud() -> void:
 	var total_minutes := int(match_seconds / 60.0)
 	var minutes := total_minutes % 90
 	var seconds := int(match_seconds) % 60
-	hud.text = "FOOTBALL EMPIRE   |   MAVİ %d - %d KIRMIZI   |   %02d:%02d" % [score_blue, score_red, minutes, seconds]
-	var team_text := "MAVİ TAKIM" if possession_team == 0 else ("KIRMIZI TAKIM" if possession_team == 1 else "TOP BOŞTA")
+	var blue_name := "MAVİ TAKIM"
+	if CareerDatabase.selected_club != null:
+		blue_name = CareerDatabase.selected_club.name
+	hud.text = "FOOTBALL EMPIRE   |   %s %d - %d RAKİP   |   %02d:%02d" % [blue_name, score_blue, score_red, minutes, seconds]
+	var team_text := "SEÇİLEN KULÜP" if possession_team == 0 else ("RAKİP" if possession_team == 1 else "TOP BOŞTA")
 	status_label.text = "Top kontrolü: " + team_text + "   •   4-3-3   •   %s" % ("MAÇ DEVAM EDİYOR" if match_running else "DURAKLATILDI")
 
