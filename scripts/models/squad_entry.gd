@@ -52,11 +52,26 @@ static func from_dictionary(data: Dictionary) -> SquadEntry:
 	entry.height_cm = int(data.get("height_cm", 0))
 	return entry
 
+static func normalize_position(source_position: String) -> String:
+	match source_position.strip_edges().to_upper():
+		"G", "GK":
+			return "GK"
+		"D", "DF", "DEF":
+			return "DEF"
+		"M", "MF", "MID":
+			return "MID"
+		"F", "FW", "FWD", "ST":
+			return "FWD"
+		_:
+			return "UNK"
+
 func to_player_data() -> PlayerData:
 	var player := PlayerData.new()
 	player.id = player_id
 	player.name = player_name
-	player.position = position
+	player.position = normalize_position(position)
+	if not position.is_empty():
+		player.source_positions.append(position)
 	player.club_id = club_id
 	player.nationality = nationality
 	player.birth_date = birth_date if birth_precision == 11 else ""
