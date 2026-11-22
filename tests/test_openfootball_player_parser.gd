@@ -6,7 +6,7 @@ func _initialize() -> void:
 	var sample := """= Turkey
 Emir Dadük,                   G,  1.91 m,  b. 13 Feb 2008 @ Hatay
 Arda Ünyay,                   D,  1.84 m,  b. 18 Jan 2007 @ Ankara
-Batuhan Çelik,                M|F,- ,      b. 12 Jan 2005 @ İstanbul
+Batuhan Çelik,                M|F, -, b. 12 Jan 2005 @ İstanbul
 Oyuncu kaydı olmayan satır
 """
 	var players: Array[PlayerData] = PlayerRepository.parse_players_text(sample)
