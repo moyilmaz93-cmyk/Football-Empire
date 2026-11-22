@@ -20,6 +20,15 @@ Football Empire, FIFA/PES tarzı doğrudan oyuncu kontrolü sunmayan; kulüp yö
 
 Bu bölüm prototip kapsamını anlatır; tam ve gerçekçi bir futbol simülasyonu olduğu anlamına gelmez.
 
+## Gerçek veri entegrasyonu — ilk aşama
+- OpenFootball CC0 veri deposu için HTTP tabanlı JSON yükleyicisi eklendi.
+- Maç fikstürü/sonucu, takım listesi ve puan tablosu veri modelleri eklendi.
+- Türkiye Süper Lig için 2025-26 JSON dosyası kaynak depoda listeleniyor.
+- OpenFootball'ın 2026-27 JSON dosya listesinde Türkiye ligi henüz görünmediği için mevcut sezon varmış gibi gösterilmiyor.
+- Oyuncu ve kulüp veri modelleri hazırlandı; gerçek kadro eşleştirmesi ve oyuncu yetenekleri henüz entegre edilmedi.
+
+Teknik kullanım ve kaynak kapsamı: `docs/OPENFOOTBALL_VERI_ENTEGRASYONU.md`.
+
 ## Hedeflenen tam oyun
 - Gerçek kulüpler, futbolcular, teknik direktörler, ligler ve kupalar
 - Lig fikstürü, puan durumu, kupa turları ve sezon takvimi
@@ -41,4 +50,4 @@ Veri kaynağı değerlendirme ölçütleri için `docs/VERI_VE_LISANS_POLITIKASI
 Projeyi Godot 4 ile açın ve `scenes/main.tscn` sahnesini çalıştırın.
 
 ## Test durumu
-GitHub'a yüklenmiş olması, Godot üzerinde derlendiği veya Android cihazda test edildiği anlamına gelmez. Motor ve cihaz testleri ayrıca doğrulanmalıdır.
+GitHub'a yüklenmiş olması, Godot üzerinde derlendiği veya Android cihazda test edildiği anlamına gelmez. Yeni veri sınıfları ve HTTP yükleyicisi Godot editöründe henüz çalıştırılmadı. Android canlı veri isteği için dışa aktarma ayarlarında internet izni gerekir.
