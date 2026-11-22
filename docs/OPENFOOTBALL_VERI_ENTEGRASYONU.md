@@ -1,30 +1,41 @@
 # OpenFootball veri entegrasyonu
 
-## Kaynak
+## Lig fikstürleri ve sonuçlar
 - Depo: https://github.com/openfootball/football.json
-- Lisans: CC0 1.0 (deponun veri ve şeması için)
+- Lisans: CC0 1.0
 - Ham JSON adres şablonu: https://raw.githubusercontent.com/openfootball/football.json/master/{sezon}/{lig_kodu}.json
-- Örnek: `2025-26/tr.1.json` (Türkiye Süper Lig dosyası 2025-26 klasöründe listeleniyor)
+- Türkiye Süper Lig örneği: `2025-26/tr.1.json`
 
-OpenFootball Avrupa deposu Türkiye Süper Lig ve 1. Lig fikstür/sonuç verilerini kapsadığını belirtiyor. Bununla birlikte, football.json deposunun 2026-27 klasöründeki mevcut dosya listesinde Türkiye dosyası görünmüyor. Bu nedenle 2026-27 Türkiye verisinin yayınlandığı varsayılmamalı; uygulama kaynakta olmayan dosyayı hata olarak göstermelidir.
+## Oyuncu biyografi verileri
+- Depo: https://github.com/openfootball/players
+- Türkiye dosyası: https://github.com/openfootball/players/blob/master/europe/turkey/tr.players.txt
+- Lisans: CC0 1.0
+- Dosya; oyuncu adı, pozisyon, varsa boy, doğum tarihi ve varsa doğum yerini içerir.
+- Kaynak, Türkiye oyuncu listesidir; güncel Süper Lig kulüp kadroları veya oyuncu yetenek puanları değildir.
+- Oyuncu kulübü eşleştirmesi yapılmadığı için `club_id` boş bırakılır. Uydurma kulüp bağlantısı kurulmaz.
+- Kaynak verisi güncelliğini yitirebilir; canlı kadro doğrulaması olarak kabul edilmemelidir.
 
 ## Kod
-`scripts/data/openfootball_repository.gd` HTTP üzerinden seçilen sezon ve lig JSON dosyasını alır.
+- `scripts/data/openfootball_repository.gd`: sezon/lig fikstür JSON'unu yükler.
+- `scripts/data/openfootball_player_repository.gd`: Türkiye oyuncu metin dosyasını indirir ve satırları çözümler.
 - `scripts/models/match_fixture.gd`: maç kaydını çözümler.
 - `scripts/models/league_data.gd`: fikstürü, takım listesini ve puan tablosunu üretir.
-- `scripts/models/club_data.gd` ve `player_data.gd`: kulüp/oyuncu veri modelleridir.
+- `scripts/models/club_data.gd`: kulüp veri modeli.
+- `scripts/models/player_data.gd`: oyuncu veri modeli.
 
-## Kullanım örneği
+## Oyuncu verisini kullanma
 Bir Node içinde:
 ```gdscript
-var repository := OpenFootballRepository.new()
-add_child(repository)
-repository.league_loaded.connect(_on_league_loaded)
-repository.load_failed.connect(_on_data_error)
-repository.load_league("2025-26", "tr.1")
+var player_repository := OpenFootballPlayerRepository.new()
+add_child(player_repository)
+player_repository.players_loaded.connect(_on_players_loaded)
+player_repository.load_turkey_players()
+
+func _on_players_loaded(players: Array[PlayerData]) -> void:
+	print("Yüklenen oyuncu sayısı: ", players.size())
 ```
 
-## Sınırlar
-Bu entegrasyon fikstür ve sonuç verisidir; oyuncu kadrosu, oyuncu yetenek puanları, armalar ve forma görsellerini sağlamaz. Bunlar ayrı, ücretsiz ve açık kullanım koşulları doğrulanmış kaynaklardan alınmalıdır. CC0 veri lisansı, üçüncü taraf marka/arma/görsel haklarını otomatik olarak kapsamaz.
+## Önemli sınırlar
+Bu kaynak gerçek oyuncu biyografisi sağlar; oyuncu yetenek puanı, piyasa değeri, maaş, sözleşme, güncel kulüp veya forma numarası sağlamaz. Bu alanlar başka bir doğrulanmış ücretsiz kaynaktan gelmedikçe boş kalmalıdır. Maç motorunun gerçekçi görünmesi için uydurma puanları gerçek veri gibi göstermeyin.
 
-Android'de canlı indirme için dışa aktarma ayarlarında internet izni etkin olmalıdır. Çevrimdışı oynanabilmesi için indirilen veri daha sonra uygulama içinde yerel olarak önbelleğe alınmalıdır; bu aşamada önbellek özelliği henüz eklenmemiştir.
+Android'de canlı indirme için dışa aktarma ayarlarında internet izni etkin olmalıdır. Bu sürümde çevrimdışı önbellek henüz eklenmemiştir.
