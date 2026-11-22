@@ -21,13 +21,10 @@ Football Empire, FIFA/PES tarzı doğrudan oyuncu kontrolü sunmayan; kulüp yö
 Bu bölüm prototip kapsamını anlatır; tam ve gerçekçi bir futbol simülasyonu olduğu anlamına gelmez.
 
 ## Gerçek veri entegrasyonu — ilk aşama
-- OpenFootball CC0 veri deposu için HTTP tabanlı JSON yükleyicisi eklendi.
+- OpenFootball CC0 veri deposu için genel HTTP tabanlı JSON yükleyicisi eklendi; sezon ve lig kodu parametre olarak verilir.
 - Maç fikstürü/sonucu, takım listesi ve puan tablosu veri modelleri eklendi.
-- Türkiye Süper Lig için 2025-26 JSON dosyası kaynak depoda listeleniyor.
-- OpenFootball'ın 2026-27 JSON dosya listesinde Türkiye ligi henüz görünmediği için mevcut sezon varmış gibi gösterilmiyor.
-- Oyuncu ve kulüp veri modelleri hazırlandı; gerçek kadro eşleştirmesi ve oyuncu yetenekleri henüz entegre edilmedi.
-
-Teknik kullanım ve kaynak kapsamı: `docs/OPENFOOTBALL_VERI_ENTEGRASYONU.md`.
+- OpenFootball'da kaynak dosyası bulunan ligler fikstür katmanına bağlanabilir; dosya yoksa sistem hata döndürür.
+- Fikstür verisi ile sezonluk oyuncu kadrosu ayrı veri kaynaklarıdır; bir ligde fikstür bulunması o ligin oyuncu kadrosunun da bulunduğu anlamına gelmez.
 
 ## Oyuncu biyografi verisi — OpenFootball Players
 - CC0 Türkiye oyuncu biyografi listesi ayrıştırıcısı eklendi.
@@ -42,8 +39,10 @@ Teknik kullanım ve kaynak kapsamı: `docs/OPENFOOTBALL_VERI_ENTEGRASYONU.md`.
 - Veri lisansı CC BY-SA 4.0; kaynak atfı ve ShareAlike koşulları korunmalıdır.
 - Eksik kulüp kadroları otomatik doldurulmaz.
 - GitHub Actions içinden `Refresh open football data` iş akışı elle çalıştırıldığında veri JSON dosyası oluşturulur.
-- Oyun içi okuyucu: `scripts/data/openfootballbase_repository.gd`.
-- İş akışı henüz çalıştırılmadı; bu nedenle JSON kadro paketi henüz depoda bulunmuyor.
+- Genel lig okuyucusu: `scripts/data/openfootballbase_repository.gd`; ülke/lig bağımsız katalog: `scripts/data/football_data_catalog.gd`.
+- Kariyer ekranlarının kullanacağı global servis: `CareerDatabase` (autoload). `CareerDatabase.load_turkey_super_league("2026/27")` mevcut Türkiye paketini açar; diğer ligler `load_career_data(dataset_path, season, competition, country)` ile aynı modele bağlanır.
+- Şu an depoda gerçek kadro paketi yalnızca Türkiye Süper Lig için var. 2026/27 kaynağında 516, 2025/26'da 121, 2024/25'te 559 kayıt bulunuyor. 1. Lig için bu pakette kayıt çıkmadı.
+- Veri modeli diğer ülkeleri destekleyecek şekilde genelleştirildi; bu, diğer liglerin kadrolarının hazır olduğu anlamına gelmez. Her ülke/lig için lisansı uygun kaynak verisi ayrıca eklenmelidir.
 
 Ayrıntılar: `docs/OPENFOOTBALLBASE_KADRO_ENTEGRASYONU.md` ve `THIRD_PARTY_LICENSES.md`.
 
