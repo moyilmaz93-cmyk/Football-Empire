@@ -13,7 +13,7 @@ static func from_openfootball(data: Dictionary, season_id: String, url: String) 
 	league.source_url = url
 
 	var raw_matches: Variant = data.get("matches", [])
-	if not raw_matches is Array:
+	if not (raw_matches is Array):
 		return league
 
 	for raw_match in raw_matches:
@@ -44,38 +44,38 @@ func get_standings() -> Array[Dictionary]:
 			continue
 		var home: Dictionary = table[fixture.home_team]
 		var away: Dictionary = table[fixture.away_team]
-		home.played += 1
-		away.played += 1
-		home.gf += fixture.home_goals
-		home.ga += fixture.away_goals
-		away.gf += fixture.away_goals
-		away.ga += fixture.home_goals
+		home["played"] += 1
+		away["played"] += 1
+		home["gf"] += fixture.home_goals
+		home["ga"] += fixture.away_goals
+		away["gf"] += fixture.away_goals
+		away["ga"] += fixture.home_goals
 		if fixture.home_goals > fixture.away_goals:
-			home.won += 1
-			home.points += 3
-			away.lost += 1
+			home["won"] += 1
+			home["points"] += 3
+			away["lost"] += 1
 		elif fixture.home_goals < fixture.away_goals:
-			away.won += 1
-			away.points += 3
-			home.lost += 1
+			away["won"] += 1
+			away["points"] += 3
+			home["lost"] += 1
 		else:
-			home.drawn += 1
-			away.drawn += 1
-			home.points += 1
-			away.points += 1
+			home["drawn"] += 1
+			away["drawn"] += 1
+			home["points"] += 1
+			away["points"] += 1
 
 	var standings: Array[Dictionary] = []
 	for team_name in table.keys():
 		var row: Dictionary = table[team_name]
-		row.gd = row.gf - row.ga
+		row["gd"] = row["gf"] - row["ga"]
 		standings.append(row)
 	standings.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		if a.points != b.points:
-			return a.points > b.points
-		if a.gd != b.gd:
-			return a.gd > b.gd
-		if a.gf != b.gf:
-			return a.gf > b.gf
-		return str(a.team) < str(b.team)
+		if a["points"] != b["points"]:
+			return a["points"] > b["points"]
+		if a["gd"] != b["gd"]:
+			return a["gd"] > b["gd"]
+		if a["gf"] != b["gf"]:
+			return a["gf"] > b["gf"]
+		return str(a["team"]) < str(b["team"])
 	)
 	return standings
