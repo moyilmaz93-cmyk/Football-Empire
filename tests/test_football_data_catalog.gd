@@ -28,6 +28,7 @@ func _initialize() -> void:
 	assert(players.size() == 2)
 	assert(players[0].position in ["FWD", "GK"])
 	assert(first.to_player_data().position == "FWD")
+	assert(first.to_player_data().shirt_number == 9)
 	assert(is_equal_approx(first.to_player_data().height_m, 1.81))
 
 	print("Football data catalog tests: PASS")
