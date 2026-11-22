@@ -35,7 +35,13 @@ func _on_players_loaded(players: Array[PlayerData]) -> void:
 	print("Yüklenen oyuncu sayısı: ", players.size())
 ```
 
-## Parser testleri\n\n- Test dosyası: `tests/test_openfootball_player_parser.gd`\n- Godot 4 kurulu bir ortamda komut: `godot --headless --path . --script tests/test_openfootball_player_parser.gd`\n- Bu test dosyası GitHub'a eklendi ancak bu oturumda Godot motoru bulunmadığından çalıştırılmadı.\n\n## Önemli sınırlar
+## Parser testleri
+
+- Test dosyası: `tests/test_openfootball_player_parser.gd`
+- Godot 4 kurulu bir ortamda komut: `godot --headless --path . --script tests/test_openfootball_player_parser.gd`
+- Bu test dosyası GitHub'a eklendi ancak bu oturumda Godot motoru bulunmadığından çalıştırılmadı.
+
+## Önemli sınırlar
 Bu kaynak gerçek oyuncu biyografisi sağlar; oyuncu yetenek puanı, piyasa değeri, maaş, sözleşme, güncel kulüp veya forma numarası sağlamaz. Bu alanlar başka bir doğrulanmış ücretsiz kaynaktan gelmedikçe boş kalmalıdır. Maç motorunun gerçekçi görünmesi için uydurma puanları gerçek veri gibi göstermeyin.
 
 Android'de canlı indirme için dışa aktarma ayarlarında internet izni etkin olmalıdır. Bu sürümde çevrimdışı önbellek henüz eklenmemiştir.
