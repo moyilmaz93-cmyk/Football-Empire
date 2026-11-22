@@ -12,6 +12,8 @@ var active_players: Array[PlayerData] = []
 var active_season: String = ""
 var active_competition: String = ""
 var active_country: String = ""
+var selected_club: ClubData
+var selected_players: Array[PlayerData] = []
 
 func _ready() -> void:
 	squad_repository = OpenFootballBaseRepository.new()
@@ -49,3 +51,10 @@ func get_clubs() -> Array[ClubData]:
 
 func get_players() -> Array[PlayerData]:
 	return active_players.duplicate()
+
+func select_club(club: ClubData) -> void:
+	selected_club = club
+	selected_players.clear()
+	for player in active_players:
+		if player.club_id == club.id:
+			selected_players.append(player)
