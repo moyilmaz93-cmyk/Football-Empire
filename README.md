@@ -29,7 +29,7 @@ Bu bölüm prototip kapsamını anlatır; tam ve gerçekçi bir futbol simülasy
 
 Teknik kullanım ve kaynak kapsamı: `docs/OPENFOOTBALL_VERI_ENTEGRASYONU.md`.
 
-## Hedeflenen tam oyun
+## Oyuncu biyografi verisi — ilk entegrasyon\n- OpenFootball Players CC0 deposundan Türkiye oyuncu listesi indirilebiliyor.\n- İsim, mevki, varsa boy, doğum tarihi ve doğum yeri ayrıştırılıyor.\n- Bu liste güncel kulüp kadrosu değildir; oyunculara kulüp ataması ve yetenek puanı uydurulmaz.\n- Kod: `scripts/data/openfootball_player_repository.gd`.\n\n## Hedeflenen tam oyun
 - Gerçek kulüpler, futbolcular, teknik direktörler, ligler ve kupalar
 - Lig fikstürü, puan durumu, kupa turları ve sezon takvimi
 - Transfer pazarı, sözleşmeler, maaş bütçesi ve kulüp ekonomisi
