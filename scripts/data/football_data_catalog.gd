@@ -31,8 +31,9 @@ static func build_players(entries: Array[SquadEntry]) -> Array[PlayerData]:
 	for entry in entries:
 		if entry.player_id.is_empty() or entry.player_name.is_empty():
 			continue
-		if not by_player.has(entry.player_id):
-			by_player[entry.player_id] = entry.to_player_data()
+		var membership_key := entry.player_id + "|" + entry.club_id
+		if not by_player.has(membership_key):
+			by_player[membership_key] = entry.to_player_data()
 	var players: Array[PlayerData] = []
 	for value in by_player.values():
 		players.append(value)
