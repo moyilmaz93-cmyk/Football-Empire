@@ -40,7 +40,10 @@ Bu bölüm prototip kapsamını anlatır; tam ve gerçekçi bir futbol simülasy
 - Eksik kulüp kadroları otomatik doldurulmaz.
 - GitHub Actions içinden `Refresh open football data` iş akışı elle çalıştırıldığında veri JSON dosyası oluşturulur.
 - Genel lig okuyucusu: `scripts/data/openfootballbase_repository.gd`; ülke/lig bağımsız katalog: `scripts/data/football_data_catalog.gd`.
-- Kariyer ekranlarının kullanacağı global servis: `CareerDatabase` (autoload). `CareerDatabase.load_turkey_super_league("2026/27")` mevcut Türkiye paketini açar; diğer ligler `load_career_data(dataset_path, season, competition, country)` ile aynı modele bağlanır.
+- Açılış ekranı: `scenes/career_setup.tscn`; sezon seçimi, mevcut lig verisini yükleme, kulüp listesi ve kulüp oyuncu listesini gösterir.
+- Kariyer ekranlarının kullandığı global servis: `CareerDatabase` (autoload). `CareerDatabase.load_turkey_super_league("2026/27")` mevcut Türkiye paketini açar; diğer ligler `load_career_data(dataset_path, season, competition, country)` ile aynı modele bağlanır.
+- Seçilen kulüp maç HUD'ında gösterilir. Maç simülasyonundaki 11 oyuncu henüz seçilen gerçek kadrodan oluşturulmuyor; bu sonraki entegrasyon adımıdır.
+- Ücretsiz Godot doğrulama iş akışı: `.github/workflows/godot-validation.yml`.
 - Şu an depoda gerçek kadro paketi yalnızca Türkiye Süper Lig için var. 2026/27 kaynağında 516, 2025/26'da 121, 2024/25'te 559 kayıt bulunuyor. 1. Lig için bu pakette kayıt çıkmadı.
 - Veri modeli diğer ülkeleri destekleyecek şekilde genelleştirildi; bu, diğer liglerin kadrolarının hazır olduğu anlamına gelmez. Her ülke/lig için lisansı uygun kaynak verisi ayrıca eklenmelidir.
 
