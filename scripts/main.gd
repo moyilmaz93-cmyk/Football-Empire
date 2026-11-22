@@ -29,6 +29,7 @@ var status_label: Label
 var pause_button: Button
 var speed_button: Button
 var match_speed := 1.0
+var selected_lineup_count := 0
 
 func _ready() -> void:
 	randomize()
@@ -164,6 +165,7 @@ func _build_players() -> void:
 		Vector3(-7.0, 0.0, -21.0), Vector3(-5.0, 0.0, 0.0), Vector3(-7.0, 0.0, 21.0)
 	]
 	var selected_lineup := _build_starting_lineup(CareerDatabase.selected_players)
+	selected_lineup_count = selected_lineup.size()
 	for i in range(PLAYER_COUNT):
 		var blue_pos := formation[i]
 		var red_pos := Vector3(-formation[i].x, 0.0, formation[i].z)
@@ -471,8 +473,8 @@ func _update_hud() -> void:
 	hud.text = "FOOTBALL EMPIRE   |   %s %d - %d RAKİP   |   %02d:%02d" % [blue_name, score_blue, score_red, minutes, seconds]
 	var team_text := "SEÇİLEN KULÜP" if possession_team == 0 else ("RAKİP" if possession_team == 1 else "TOP BOŞTA")
 	var owner_text := "" if ball_owner == null else " — " + str(ball_owner.get_meta("player_name")) + " (#" + str(ball_owner.get_meta("shirt_number")) + ")"
-	var lineup_text := "Kadro: %d/11" % blue_players.size()
-	if CareerDatabase.selected_players.size() < PLAYER_COUNT:
-		lineup_text = "Kadro verisi eksik: %d/11" % CareerDatabase.selected_players.size()
+	var lineup_text := "Gerçek ilk 11: %d/11" % selected_lineup_count
+	if selected_lineup_count < PLAYER_COUNT:
+		lineup_text = "Kadro verisi eksik: %d/11" % selected_lineup_count
 	status_label.text = "Top: " + team_text + owner_text + "   •   4-3-3   •   " + lineup_text + "   •   " + ("MAÇ DEVAM EDİYOR" if match_running else "DURAKLATILDI")
 
