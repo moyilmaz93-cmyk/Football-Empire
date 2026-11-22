@@ -35,6 +35,10 @@ var bench_data: Array[PlayerData] = []
 var lineup_slot_select: OptionButton
 var substitute_player_select: OptionButton
 var substitute_button: Button
+var formation_select: OptionButton
+var mentality_select: OptionButton
+var active_formation := "4-3-3"
+var team_mentality := "DENGELİ"
 
 func _ready() -> void:
 	randomize()
@@ -269,6 +273,7 @@ func _build_hud() -> void:
 	speed_button = _make_hud_button(layer, "HIZ: 1x", Vector2(196.0, 630.0), Vector2(150.0, 58.0))
 	speed_button.pressed.connect(_on_speed_pressed)
 	_build_substitution_controls(layer)
+	_build_tactics_controls(layer)
 	_update_hud()
 
 func _build_substitution_controls(parent: Node) -> void:
@@ -330,6 +335,76 @@ func _on_substitute_pressed() -> void:
 	_refresh_substitution_options()
 	_update_hud()
 
+
+func _build_tactics_controls(parent: Node) -> void:
+	var panel := VBoxContainer.new()
+	panel.position = Vector2(900.0, 190.0)
+	panel.custom_minimum_size = Vector2(340.0, 0.0)
+	panel.add_theme_constant_override("separation", 6)
+	parent.add_child(panel)
+	var heading := Label.new()
+	heading.text = "TAKTİK AYARLARI"
+	heading.add_theme_color_override("font_color", Color(0.45, 0.85, 1.0))
+	panel.add_child(heading)
+	formation_select = OptionButton.new()
+	for formation_name in ["4-3-3", "4-2-3-1", "4-4-2", "3-5-2"]:
+		formation_select.add_item(formation_name)
+	formation_select.select(0)
+	panel.add_child(formation_select)
+	mentality_select = OptionButton.new()
+	for mentality_name in ["HÜCUM", "DENGELİ", "DEFANS"]:
+		mentality_select.add_item(mentality_name)
+	mentality_select.select(1)
+	panel.add_child(mentality_select)
+	var apply_button := Button.new()
+	apply_button.text = "TAKTİĞİ UYGULA"
+	apply_button.pressed.connect(_on_apply_tactics_pressed)
+	panel.add_child(apply_button)
+
+func _on_apply_tactics_pressed() -> void:
+	if formation_select == null or mentality_select == null:
+		return
+	active_formation = formation_select.get_item_text(formation_select.selected)
+	team_mentality = mentality_select.get_item_text(mentality_select.selected)
+	var positions := _get_formation_positions(active_formation)
+	for i in range(mini(blue_players.size(), positions.size())):
+		var player := blue_players[i]
+		player.set_meta("base_position", positions[i])
+		player.position = positions[i]
+	_update_hud()
+
+func _get_formation_positions(formation_name: String) -> Array[Vector3]:
+	match formation_name:
+		"4-2-3-1":
+			return [
+				Vector3(-45.0, 0.0, 0.0),
+				Vector3(-34.0, 0.0, -23.0), Vector3(-36.0, 0.0, -8.0), Vector3(-36.0, 0.0, 8.0), Vector3(-34.0, 0.0, 23.0),
+				Vector3(-23.0, 0.0, -9.0), Vector3(-23.0, 0.0, 9.0),
+				Vector3(-10.0, 0.0, -21.0), Vector3(-8.0, 0.0, 0.0), Vector3(-10.0, 0.0, 21.0),
+				Vector3(2.0, 0.0, 0.0)
+			]
+		"4-4-2":
+			return [
+				Vector3(-45.0, 0.0, 0.0),
+				Vector3(-34.0, 0.0, -23.0), Vector3(-36.0, 0.0, -8.0), Vector3(-36.0, 0.0, 8.0), Vector3(-34.0, 0.0, 23.0),
+				Vector3(-20.0, 0.0, -23.0), Vector3(-21.0, 0.0, -8.0), Vector3(-21.0, 0.0, 8.0), Vector3(-20.0, 0.0, 23.0),
+				Vector3(-5.0, 0.0, -9.0), Vector3(-5.0, 0.0, 9.0)
+			]
+		"3-5-2":
+			return [
+				Vector3(-45.0, 0.0, 0.0),
+				Vector3(-34.0, 0.0, -19.0), Vector3(-37.0, 0.0, 0.0), Vector3(-34.0, 0.0, 19.0),
+				Vector3(-23.0, 0.0, -25.0), Vector3(-22.0, 0.0, -13.0), Vector3(-22.0, 0.0, 0.0), Vector3(-22.0, 0.0, 13.0), Vector3(-23.0, 0.0, 25.0),
+				Vector3(-5.0, 0.0, -9.0), Vector3(-5.0, 0.0, 9.0)
+			]
+		_:
+			return [
+				Vector3(-45.0, 0.0, 0.0),
+				Vector3(-33.0, 0.0, -22.0), Vector3(-35.0, 0.0, -8.0), Vector3(-35.0, 0.0, 8.0), Vector3(-33.0, 0.0, 22.0),
+				Vector3(-18.0, 0.0, -14.0), Vector3(-20.0, 0.0, 0.0), Vector3(-18.0, 0.0, 14.0),
+				Vector3(-7.0, 0.0, -21.0), Vector3(-5.0, 0.0, 0.0), Vector3(-7.0, 0.0, 21.0)
+			]
+
 func _make_hud_button(parent: Node, text_value: String, pos: Vector2, button_size: Vector2) -> Button:
 	var button := Button.new()
 	button.text = text_value
@@ -388,6 +463,11 @@ func _update_players(delta: float) -> void:
 				target.x += direction * clampf((ball.position.x * direction) * 0.12, -3.0, 8.0)
 				if i >= 8:
 					target.x += direction * 3.0
+				if team_id == 0 and i > 0:
+					if team_mentality == "HÜCUM":
+						target.x += 4.0
+					elif team_mentality == "DEFANS":
+						target.x -= 4.0
 				if player == ball_owner:
 					target = player.position + Vector3(direction * 4.0, 0.0, 0.0)
 			elif i == nearest_index:
@@ -556,5 +636,5 @@ func _update_hud() -> void:
 	var lineup_text := "Gerçek ilk 11: %d/11" % selected_lineup_count
 	if selected_lineup_count < PLAYER_COUNT:
 		lineup_text = "Kadro verisi eksik: %d/11" % selected_lineup_count
-	status_label.text = "Top: " + team_text + owner_text + "   •   4-3-3   •   " + lineup_text + "   •   Yedek: %d" % bench_data.size() + "   •   " + ("MAÇ DEVAM EDİYOR" if match_running else "DURAKLATILDI")
+	status_label.text = "Top: " + team_text + owner_text + "   •   " + active_formation + " / " + team_mentality + "   •   " + lineup_text + "   •   Yedek: %d" % bench_data.size() + "   •   " + ("MAÇ DEVAM EDİYOR" if match_running else "DURAKLATILDI")
 
