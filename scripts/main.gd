@@ -26,9 +26,9 @@ var match_running := true
 var ai_clock := 0.0
 var hud: Label
 var status_label: Label
-var pass_button: Button
-var shoot_button: Button
 var pause_button: Button
+var speed_button: Button
+var match_speed := 1.0
 
 func _ready() -> void:
 	randomize()
@@ -43,7 +43,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if not match_running:
 		return
-	match_seconds = minf(match_seconds + delta * MATCH_TIME_SCALE, MATCH_LENGTH_SECONDS)
+	match_seconds = minf(match_seconds + delta * MATCH_TIME_SCALE * match_speed, MATCH_LENGTH_SECONDS)
 	if match_seconds >= MATCH_LENGTH_SECONDS:
 		match_running = false
 		pause_button.text = "MAÇ BİTTİ"
@@ -116,30 +116,33 @@ func _make_player(team_id: int, index: int, team_color: Color, start_pos: Vector
 	player.position = start_pos
 	player.set_meta("team_id", team_id)
 	player.set_meta("player_index", index)
+	player.set_meta("shirt_number", index + 1)
 	player.set_meta("base_position", start_pos)
 
-	var body := MeshInstance3D.new()
-	var capsule := CapsuleMesh.new()
-	capsule.radius = 0.58
-	capsule.height = 1.9
-	body.mesh = capsule
-	var material := StandardMaterial3D.new()
-	material.albedo_color = team_color
-	material.roughness = 0.65
-	body.material_override = material
-	body.position.y = 1.0
-	player.add_child(body)
+	# Manager-style match marker: a flat team-colored disc, not a human character.
+	var disc := MeshInstance3D.new()
+	var disc_mesh := CylinderMesh.new()
+	disc_mesh.top_radius = 0.82
+	disc_mesh.bottom_radius = 0.82
+	disc_mesh.height = 0.22
+	disc.mesh = disc_mesh
+	var disc_material := StandardMaterial3D.new()
+	disc_material.albedo_color = team_color
+	disc_material.roughness = 0.55
+	disc.material_override = disc_material
+	disc.position.y = 0.16
+	player.add_child(disc)
 
-	var head := MeshInstance3D.new()
-	var head_mesh := SphereMesh.new()
-	head_mesh.radius = 0.32
-	head_mesh.height = 0.64
-	head.mesh = head_mesh
-	var head_material := StandardMaterial3D.new()
-	head_material.albedo_color = Color(0.88, 0.72, 0.58)
-	head.material_override = head_material
-	head.position.y = 2.05
-	player.add_child(head)
+	var number := Label3D.new()
+	number.text = str(index + 1)
+	number.font_size = 64
+	number.pixel_size = 0.012
+	number.position = Vector3(0.0, 0.34, 0.0)
+	number.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	number.modulate = Color.WHITE
+	number.outline_size = 8
+	number.no_depth_test = true
+	player.add_child(number)
 
 	add_child(player)
 	all_players.append(player)
@@ -180,10 +183,10 @@ func _build_ball() -> void:
 
 func _build_camera() -> void:
 	var camera := Camera3D.new()
-	camera.position = Vector3(0.0, 78.0, 86.0)
-	camera.rotation_degrees = Vector3(-43.0, 0.0, 0.0)
+	camera.position = Vector3(0.0, 105.0, 0.01)
+	camera.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
 	camera.current = true
-	camera.fov = 52.0
+	camera.fov = 48.0
 	add_child(camera)
 
 func _build_hud() -> void:
@@ -202,12 +205,10 @@ func _build_hud() -> void:
 	status_label.add_theme_color_override("font_color", Color(0.9, 0.92, 0.9))
 	layer.add_child(status_label)
 
-	pass_button = _make_hud_button(layer, "PAS", Vector2(24.0, 630.0), Vector2(130.0, 58.0))
-	pass_button.pressed.connect(_on_pass_pressed)
-	shoot_button = _make_hud_button(layer, "ŞUT", Vector2(166.0, 630.0), Vector2(130.0, 58.0))
-	shoot_button.pressed.connect(_on_shoot_pressed)
-	pause_button = _make_hud_button(layer, "DURAKLAT", Vector2(308.0, 630.0), Vector2(160.0, 58.0))
+	pause_button = _make_hud_button(layer, "DURAKLAT", Vector2(24.0, 630.0), Vector2(160.0, 58.0))
 	pause_button.pressed.connect(_on_pause_pressed)
+	speed_button = _make_hud_button(layer, "HIZ: 1x", Vector2(196.0, 630.0), Vector2(150.0, 58.0))
+	speed_button.pressed.connect(_on_speed_pressed)
 	_update_hud()
 
 func _make_hud_button(parent: Node, text_value: String, pos: Vector2, button_size: Vector2) -> Button:
@@ -410,15 +411,18 @@ func _kick_ball(target: Vector3, speed: float, lift: float) -> void:
 	ball_velocity = direction * speed
 	ball_velocity.y = lift
 
-func _on_pass_pressed() -> void:
-	_pass_ball()
-
-func _on_shoot_pressed() -> void:
-	_shoot_ball()
-
 func _on_pause_pressed() -> void:
 	match_running = not match_running
 	pause_button.text = "DEVAM ET" if not match_running else "DURAKLAT"
+
+func _on_speed_pressed() -> void:
+	if is_equal_approx(match_speed, 1.0):
+		match_speed = 2.0
+	elif is_equal_approx(match_speed, 2.0):
+		match_speed = 4.0
+	else:
+		match_speed = 1.0
+	speed_button.text = "HIZ: %dx" % int(match_speed)
 
 func _update_hud() -> void:
 	var total_minutes := int(match_seconds / 60.0)
@@ -427,5 +431,4 @@ func _update_hud() -> void:
 	hud.text = "FOOTBALL EMPIRE   |   MAVİ %d - %d KIRMIZI   |   %02d:%02d" % [score_blue, score_red, minutes, seconds]
 	var team_text := "MAVİ TAKIM" if possession_team == 0 else ("KIRMIZI TAKIM" if possession_team == 1 else "TOP BOŞTA")
 	status_label.text = "Top kontrolü: " + team_text + "   •   4-3-3   •   %s" % ("MAÇ DEVAM EDİYOR" if match_running else "DURAKLATILDI")
-	pass_button.disabled = ball_owner == null
-	shoot_button.disabled = ball_owner == null
+
