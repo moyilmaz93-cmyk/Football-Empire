@@ -32,7 +32,11 @@ func _initialize() -> void:
 	assert(clubs.size() == 2)
 	assert(clubs[0].player_ids.size() >= 1)
 	assert(players.size() == 3, "Aynı oyuncunun iki kulüpteki kaydı korunmalı.")
-	assert(players.count_custom(func(p: PlayerData) -> bool: return p.id == "Q10") == 2)
+	var repeated_id_count := 0
+	for player in players:
+		if player.id == "Q10":
+			repeated_id_count += 1
+	assert(repeated_id_count == 2, "Oyuncunun iki kulüp üyeliği de korunmalı.")
 	assert(players[0].position in ["FWD", "GK"])
 	assert(first.to_player_data().position == "FWD")
 	assert(first.to_player_data().shirt_number == 9)
