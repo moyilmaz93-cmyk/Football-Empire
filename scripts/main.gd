@@ -110,13 +110,17 @@ func _build_pitch() -> void:
 		for post_z in [-GOAL_HALF_WIDTH, GOAL_HALF_WIDTH]:
 			_make_box(self, "GoalPost", Vector3(0.35, 3.0, 0.25), Vector3(side * 50.0, 1.5, post_z), Color.WHITE)
 
-func _make_player(team_id: int, index: int, team_color: Color, start_pos: Vector3) -> Node3D:
+func _make_player(team_id: int, index: int, team_color: Color, start_pos: Vector3, player_data: PlayerData = null) -> Node3D:
 	var player := Node3D.new()
 	player.name = ("Blue_" if team_id == 0 else "Red_") + "%02d" % (index + 1)
 	player.position = start_pos
 	player.set_meta("team_id", team_id)
 	player.set_meta("player_index", index)
-	player.set_meta("shirt_number", index + 1)
+	var shirt_number := index + 1 if player_data == null or player_data.shirt_number < 0 else player_data.shirt_number
+	var player_name := "Oyuncu %02d" % (index + 1) if player_data == null else player_data.name
+	player.set_meta("shirt_number", shirt_number)
+	player.set_meta("player_name", player_name)
+	player.set_meta("player_id", "" if player_data == null else player_data.id)
 	player.set_meta("base_position", start_pos)
 
 	# Manager-style match marker: a flat team-colored disc, not a human character.
@@ -134,7 +138,7 @@ func _make_player(team_id: int, index: int, team_color: Color, start_pos: Vector
 	player.add_child(disc)
 
 	var number := Label3D.new()
-	number.text = str(index + 1)
+	number.text = str(shirt_number)
 	number.font_size = 64
 	number.pixel_size = 0.012
 	number.position = Vector3(0.0, 0.34, 0.0)
@@ -159,11 +163,44 @@ func _build_players() -> void:
 		Vector3(-18.0, 0.0, -14.0), Vector3(-20.0, 0.0, 0.0), Vector3(-18.0, 0.0, 14.0),
 		Vector3(-7.0, 0.0, -21.0), Vector3(-5.0, 0.0, 0.0), Vector3(-7.0, 0.0, 21.0)
 	]
+	var selected_lineup := _build_starting_lineup(CareerDatabase.selected_players)
 	for i in range(PLAYER_COUNT):
 		var blue_pos := formation[i]
 		var red_pos := Vector3(-formation[i].x, 0.0, formation[i].z)
-		blue_players.append(_make_player(0, i, blue_color, blue_pos))
+		var real_player: PlayerData = selected_lineup[i] if i < selected_lineup.size() else null
+		blue_players.append(_make_player(0, i, blue_color, blue_pos, real_player))
 		red_players.append(_make_player(1, i, red_color, red_pos))
+
+
+func _build_starting_lineup(roster: Array[PlayerData]) -> Array[PlayerData]:
+	var lineup: Array[PlayerData] = []
+	var used_ids: Dictionary = {}
+	var position_order := ["GK", "DEF", "DEF", "DEF", "DEF", "MID", "MID", "MID", "FWD", "FWD", "FWD"]
+	for wanted_position in position_order:
+		var selected: PlayerData = null
+		for player in roster:
+			if used_ids.has(player.id):
+				continue
+			if player.position == wanted_position:
+				selected = player
+				break
+		if selected == null:
+			for player in roster:
+				if used_ids.has(player.id):
+					continue
+				if player.position == "UNK":
+					selected = player
+					break
+		if selected == null:
+			for player in roster:
+				if used_ids.has(player.id):
+					continue
+				selected = player
+				break
+		if selected != null:
+			lineup.append(selected)
+			used_ids[selected.id] = true
+	return lineup
 
 func _build_ball() -> void:
 	ball = Node3D.new()
@@ -433,5 +470,9 @@ func _update_hud() -> void:
 		blue_name = CareerDatabase.selected_club.name
 	hud.text = "FOOTBALL EMPIRE   |   %s %d - %d RAKİP   |   %02d:%02d" % [blue_name, score_blue, score_red, minutes, seconds]
 	var team_text := "SEÇİLEN KULÜP" if possession_team == 0 else ("RAKİP" if possession_team == 1 else "TOP BOŞTA")
-	status_label.text = "Top kontrolü: " + team_text + "   •   4-3-3   •   %s" % ("MAÇ DEVAM EDİYOR" if match_running else "DURAKLATILDI")
+	var owner_text := "" if ball_owner == null else " — " + str(ball_owner.get_meta("player_name")) + " (#" + str(ball_owner.get_meta("shirt_number")) + ")"
+	var lineup_text := "Kadro: %d/11" % blue_players.size()
+	if CareerDatabase.selected_players.size() < PLAYER_COUNT:
+		lineup_text = "Kadro verisi eksik: %d/11" % CareerDatabase.selected_players.size()
+	status_label.text = "Top: " + team_text + owner_text + "   •   4-3-3   •   " + lineup_text + "   •   " + ("MAÇ DEVAM EDİYOR" if match_running else "DURAKLATILDI")
 
