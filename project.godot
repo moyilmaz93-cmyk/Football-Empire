@@ -4,6 +4,9 @@ config_version=5
 config/name="Football Empire"
 run/main_scene="res://scenes/main.tscn"
 
+[autoload]
+CareerDatabase="*res://scripts/data/career_database_service.gd"
+
 [display]
 window/size/viewport_width=1280
 window/size/viewport_height=720
