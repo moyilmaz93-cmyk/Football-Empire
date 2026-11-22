@@ -29,7 +29,25 @@ Bu bölüm prototip kapsamını anlatır; tam ve gerçekçi bir futbol simülasy
 
 Teknik kullanım ve kaynak kapsamı: `docs/OPENFOOTBALL_VERI_ENTEGRASYONU.md`.
 
-## Oyuncu biyografi verisi — ilk entegrasyon\n- OpenFootball Players CC0 deposundan Türkiye oyuncu listesi indirilebiliyor.\n- İsim, mevki, varsa boy, doğum tarihi ve doğum yeri ayrıştırılıyor.\n- Bu liste güncel kulüp kadrosu değildir; oyunculara kulüp ataması ve yetenek puanı uydurulmaz.\n- Kod: `scripts/data/openfootball_player_repository.gd`.\n\n## Oyuncu biyografi verisi — ilk entegrasyon\n- OpenFootball Players CC0 deposundan Türkiye oyuncu listesi indirilebiliyor.\n- İsim, mevki, varsa boy, doğum tarihi ve doğum yeri ayrıştırılıyor.\n- Kaynakta 610 ayrıştırılabilir oyuncu kaydı bulundu (kaynak dosyanın mevcut anlık kopyası); bu sayı güncel kulüp kadrosu anlamına gelmez.\n- Oyunculara kulüp ataması veya yetenek puanı uydurulmaz.\n- Kod: `scripts/data/openfootball_player_repository.gd`.\n- Parser regresyon testi eklendi: `tests/test_openfootball_player_parser.gd` (Godot'ta henüz çalıştırılmadı).\n\n## Hedeflenen tam oyun
+## Oyuncu biyografi verisi — OpenFootball Players
+- CC0 Türkiye oyuncu biyografi listesi ayrıştırıcısı eklendi.
+- İsim, mevki, varsa boy, doğum tarihi ve doğum yeri okunur.
+- Bu liste güncel kulüp kadrosu değildir; kulüp ve yetenek puanı uydurulmaz.
+- Kod: `scripts/data/openfootball_player_repository.gd`.
+- Parser testi: `tests/test_openfootball_player_parser.gd` (Godot üzerinde henüz çalıştırılmadı).
+
+## Sezonluk kulüp kadroları — OpenFootballBase
+- OpenFootballBase verisini Türkiye Süper Lig ve 1. Lig için JSON'a dönüştüren ücretsiz veri hattı eklendi.
+- Sezon, kulüp, futbolcu, forma numarası, mevki, milliyet ve kaynak revizyonu korunur.
+- Veri lisansı CC BY-SA 4.0; kaynak atfı ve ShareAlike koşulları korunmalıdır.
+- Eksik kulüp kadroları otomatik doldurulmaz.
+- GitHub Actions içinden `Refresh open football data` iş akışı elle çalıştırıldığında veri JSON dosyası oluşturulur.
+- Oyun içi okuyucu: `scripts/data/openfootballbase_repository.gd`.
+- İş akışı henüz çalıştırılmadı; bu nedenle JSON kadro paketi henüz depoda bulunmuyor.
+
+Ayrıntılar: `docs/OPENFOOTBALLBASE_KADRO_ENTEGRASYONU.md` ve `THIRD_PARTY_LICENSES.md`.
+
+## Hedeflenen tam oyun
 - Gerçek kulüpler, futbolcular, teknik direktörler, ligler ve kupalar
 - Lig fikstürü, puan durumu, kupa turları ve sezon takvimi
 - Transfer pazarı, sözleşmeler, maaş bütçesi ve kulüp ekonomisi
