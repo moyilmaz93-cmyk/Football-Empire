@@ -19,13 +19,20 @@ func _initialize() -> void:
 		"club_qid": "Q1", "club_name": "Örnek FK",
 		"player_qid": "Q11", "player": "Veli Örnek", "position": "GK"
 	})
-	var entries: Array[SquadEntry] = [first, second]
+	var third := SquadEntry.from_dictionary({
+		"season": "2026/27", "competition": "TUR-SL",
+		"club_qid": "Q2", "club_name": "Diğer FK",
+		"player_qid": "Q10", "player": "Ali Örnek", "position": "FW",
+		"shirt_number": 9
+	})
+	var entries: Array[SquadEntry] = [first, second, third]
 	var clubs := FootballDataCatalog.build_clubs(entries, "Türkiye", "TUR-SL")
 	var players := FootballDataCatalog.build_players(entries)
 
-	assert(clubs.size() == 1)
-	assert(clubs[0].player_ids.size() == 2)
-	assert(players.size() == 2)
+	assert(clubs.size() == 2)
+	assert(clubs[0].player_ids.size() >= 1)
+	assert(players.size() == 3, "Aynı oyuncunun iki kulüpteki kaydı korunmalı.")
+	assert(players.count_custom(func(p: PlayerData) -> bool: return p.id == "Q10") == 2)
 	assert(players[0].position in ["FWD", "GK"])
 	assert(first.to_player_data().position == "FWD")
 	assert(first.to_player_data().shirt_number == 9)
