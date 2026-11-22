@@ -30,6 +30,11 @@ var pause_button: Button
 var speed_button: Button
 var match_speed := 1.0
 var selected_lineup_count := 0
+var starting_lineup_data: Array[PlayerData] = []
+var bench_data: Array[PlayerData] = []
+var lineup_slot_select: OptionButton
+var substitute_player_select: OptionButton
+var substitute_button: Button
 
 func _ready() -> void:
 	randomize()
@@ -139,6 +144,7 @@ func _make_player(team_id: int, index: int, team_color: Color, start_pos: Vector
 	player.add_child(disc)
 
 	var number := Label3D.new()
+	number.name = "ShirtNumberLabel"
 	number.text = str(shirt_number)
 	number.font_size = 64
 	number.pixel_size = 0.012
@@ -165,6 +171,8 @@ func _build_players() -> void:
 		Vector3(-7.0, 0.0, -21.0), Vector3(-5.0, 0.0, 0.0), Vector3(-7.0, 0.0, 21.0)
 	]
 	var selected_lineup := _build_starting_lineup(CareerDatabase.selected_players)
+	starting_lineup_data = selected_lineup.duplicate()
+	bench_data = _build_bench(CareerDatabase.selected_players, selected_lineup)
 	selected_lineup_count = selected_lineup.size()
 	for i in range(PLAYER_COUNT):
 		var blue_pos := formation[i]
@@ -203,6 +211,18 @@ func _build_starting_lineup(roster: Array[PlayerData]) -> Array[PlayerData]:
 			lineup.append(selected)
 			used_ids[selected.id] = true
 	return lineup
+
+func _build_bench(roster: Array[PlayerData], starting: Array[PlayerData]) -> Array[PlayerData]:
+	var used: Dictionary = {}
+	for player in starting:
+		used[player.id] = true
+	var bench: Array[PlayerData] = []
+	for player in roster:
+		if not used.has(player.id):
+			bench.append(player)
+			if bench.size() >= 7:
+				break
+	return bench
 
 func _build_ball() -> void:
 	ball = Node3D.new()
@@ -248,6 +268,66 @@ func _build_hud() -> void:
 	pause_button.pressed.connect(_on_pause_pressed)
 	speed_button = _make_hud_button(layer, "HIZ: 1x", Vector2(196.0, 630.0), Vector2(150.0, 58.0))
 	speed_button.pressed.connect(_on_speed_pressed)
+	_build_substitution_controls(layer)
+	_update_hud()
+
+func _build_substitution_controls(parent: Node) -> void:
+	var panel := VBoxContainer.new()
+	panel.position = Vector2(900.0, 18.0)
+	panel.custom_minimum_size = Vector2(340.0, 0.0)
+	panel.add_theme_constant_override("separation", 6)
+	parent.add_child(panel)
+	var heading := Label.new()
+	heading.text = "OYUNCU DEĞİŞİKLİĞİ"
+	heading.add_theme_color_override("font_color", Color(0.95, 0.8, 0.32))
+	panel.add_child(heading)
+	lineup_slot_select = OptionButton.new()
+	lineup_slot_select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_child(lineup_slot_select)
+	substitute_player_select = OptionButton.new()
+	substitute_player_select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_child(substitute_player_select)
+	substitute_button = Button.new()
+	substitute_button.text = "DEĞİŞİKLİĞİ UYGULA"
+	substitute_button.pressed.connect(_on_substitute_pressed)
+	panel.add_child(substitute_button)
+	_refresh_substitution_options()
+
+func _refresh_substitution_options() -> void:
+	if lineup_slot_select == null or substitute_player_select == null:
+		return
+	lineup_slot_select.clear()
+	for i in range(blue_players.size()):
+		var p := blue_players[i]
+		lineup_slot_select.add_item("%02d | %s" % [int(p.get_meta("shirt_number")), str(p.get_meta("player_name"))], i)
+	substitute_player_select.clear()
+	for i in range(bench_data.size()):
+		var p := bench_data[i]
+		substitute_player_select.add_item("%02d | %s" % [p.shirt_number, p.name], i)
+	substitute_button.disabled = bench_data.is_empty() or blue_players.is_empty()
+
+func _on_substitute_pressed() -> void:
+	if bench_data.is_empty() or blue_players.is_empty():
+		return
+	var slot_index := lineup_slot_select.get_selected_id()
+	var bench_index := substitute_player_select.get_selected_id()
+	if slot_index < 0 or slot_index >= blue_players.size() or bench_index < 0 or bench_index >= bench_data.size():
+		return
+	var outgoing := blue_players[slot_index]
+	var incoming: PlayerData = bench_data[bench_index]
+	var replacement := _make_player(0, slot_index, Color(0.06, 0.24, 0.82), outgoing.position, incoming)
+	replacement.position = outgoing.position
+	replacement.set_meta("base_position", outgoing.get_meta("base_position"))
+	blue_players[slot_index] = replacement
+	all_players.erase(outgoing)
+	all_players.append(replacement)
+	if ball_owner == outgoing:
+		_set_possession(replacement)
+	outgoing.queue_free()
+	bench_data.remove_at(bench_index)
+	bench_data.append(starting_lineup_data[slot_index])
+	starting_lineup_data[slot_index] = incoming
+	_refresh_substitution_options()
 	_update_hud()
 
 func _make_hud_button(parent: Node, text_value: String, pos: Vector2, button_size: Vector2) -> Button:
@@ -476,5 +556,5 @@ func _update_hud() -> void:
 	var lineup_text := "Gerçek ilk 11: %d/11" % selected_lineup_count
 	if selected_lineup_count < PLAYER_COUNT:
 		lineup_text = "Kadro verisi eksik: %d/11" % selected_lineup_count
-	status_label.text = "Top: " + team_text + owner_text + "   •   4-3-3   •   " + lineup_text + "   •   " + ("MAÇ DEVAM EDİYOR" if match_running else "DURAKLATILDI")
+	status_label.text = "Top: " + team_text + owner_text + "   •   4-3-3   •   " + lineup_text + "   •   Yedek: %d" % bench_data.size() + "   •   " + ("MAÇ DEVAM EDİYOR" if match_running else "DURAKLATILDI")
 
