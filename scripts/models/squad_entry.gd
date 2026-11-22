@@ -69,6 +69,7 @@ func to_player_data() -> PlayerData:
 	var player := PlayerData.new()
 	player.id = player_id
 	player.name = player_name
+	player.shirt_number = shirt_number
 	player.position = normalize_position(position)
 	if not position.is_empty():
 		player.source_positions.append(position)
